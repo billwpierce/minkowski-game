@@ -6,6 +6,10 @@ if(!PIXI.utils.isWebGLSupported()){
 //Create a Pixi Application
 let app = new PIXI.Application({width: 256, height: 256});
 
+//Create a tink
+let t = new Tink(PIXI, app.renderer.view);
+let pointer = t.makePointer();
+
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
 
@@ -18,73 +22,102 @@ app.renderer.resize(window.innerWidth, window.innerHeight);
 
 PIXI.loader.load(setup);
 
-let circle_t;
+let line_spacing = 40;
+let num_vert_lines = 9;
+let bold_line_v = 2;
+let vert_line_length = (num_vert_lines+1)*line_spacing;
+let num_hori_lines = 9;
+let bold_line_h = 8-2;
+let hori_line_length = (num_hori_lines+1)*line_spacing;
+let vertical_offset = -100;
 
-circle_t = new PIXI.Graphics();
-circle_t.beginFill(0xfeffb3);
-circle_t.drawCircle(100, 100, 10);
-circle_t.endFill();
-circle_t.x = 0;
-circle_t.y = 0;
-circle_t.vx = 0;
-circle_t.vy = 0;
-app.stage.addChild(circle_t);
+function plot_graph(){
+    for (i = 0; i < num_hori_lines; i++) {
+        let line = new PIXI.Graphics();
+        if (i == bold_line_h){
+            line.lineStyle(4, 0xFFFFFF, 1);
+        }else{
+            line.lineStyle(1, 0xFFFFFF, 1);
+        }
+        x_start = window.innerWidth/2 - line_spacing*(num_hori_lines/2 + .5);
+        y_start = vertical_offset + line_spacing * (i - num_hori_lines/2 + .5) + window.innerHeight/2;
+        line.moveTo(x_start, y_start);
+        line.lineTo(x_start+hori_line_length, y_start);
+        app.stage.addChild(line);
+    }
+    for (i = 0; i < num_vert_lines; i++) {
+        let line = new PIXI.Graphics();
+        if (i == bold_line_v){
+            line.lineStyle(4, 0xFFFFFF, 1);
+        }else{
+            line.lineStyle(1, 0xFFFFFF, 1);
+        }
+        x_start = line_spacing * (i - num_vert_lines/2 + .5) + window.innerWidth/2;
+        y_start = vertical_offset + window.innerHeight/2 - line_spacing*(num_vert_lines/2 + .5);
+        line.moveTo(x_start, y_start);
+        line.lineTo(x_start, y_start+vert_line_length);
+        app.stage.addChild(line);
+    }
+}
+
+function plot_sol(){
+    let line = new PIXI.Graphics();
+    line.lineStyle(2, 0xe2f026, 1);
+    x_start = window.innerWidth/2 - line_spacing*(num_hori_lines/2 + .5);
+    y_start = vertical_offset + window.innerHeight/2 + line_spacing*(num_vert_lines/2 + .5);
+    line.moveTo(x_start, y_start);
+    line.lineTo(x_start+hori_line_length, y_start-vert_line_length);
+    app.stage.addChild(line);
+}
+
+function plot_mink(velocity){ // velocity as v * c.
+    inter_point_x = line_spacing * (bold_line_v - num_vert_lines/2 + .5) + window.innerWidth/2;
+    inter_point_y = vertical_offset + line_spacing * (bold_line_h - num_hori_lines/2 + .5) + window.innerHeight/2;
+    console.log("ix " + inter_point_x);
+    console.log("iy " + inter_point_y);
+    m = 1/velocity;
+    b = m * inter_point_x + inter_point_y;
+    for(i = 0; i < num_vert_lines; i++){
+        vert_down = -line_spacing*(num_hori_lines-bold_line_h);
+        start_p = intersection_of(m, -m*line_spacing*i, 1/m, 0);
+        d_start = inter_point_x + start_p[0];
+        t_start = inter_point_y - start_p[1];
+        _b = m * d_start + d_start;
+        console.log(start_p);
+        let line = new PIXI.Graphics();
+        line.lineStyle(2, 0x5ff026, 1);
+        line.moveTo(d_start, t_start);
+        delta_d = (((num_hori_lines+1)*line_spacing)/m)+(vert_down/m)-((1/m)*line_spacing*i/m);
+        console.log(delta_d);
+        line.lineTo(d_start + delta_d, t_start - m*(delta_d));
+        app.stage.addChild(line);
+    }
+    for(i = 0; i < num_hori_lines; i++){
+
+    }
+}
+
+function fl_y(value){
+    return window.innerHeight - value;
+}
+
+function intersection_of(m1, b1, m2, b2){
+    if(m1 == m2){
+        return [0,0]; // silent error i guess...
+    }else{
+        let x = (b2-b1)/(m1-m2);
+        let y = m1 * x + b1;
+        return [x,y];
+    }
+}
+
+plot_graph();
+plot_sol();
+plot_mink(.3);
 
 function setup() {
-    let left = keyboard("ArrowLeft"), up = keyboard("ArrowUp"), right = keyboard("ArrowRight"), down = keyboard("ArrowDown");
     //Set the game state
     state = play;
-
-    //Left arrow key `press` method
-    left.press = () => {
-        //Change the circle's velocity when the key is pressed
-        circle_t.vx = -5;
-        circle_t.vy = 0;
-    };
-  
-    //Left arrow key `release` method
-    left.release = () => {
-        //If the left arrow has been released, and the right arrow isn't down,
-        //and the circle isn't moving vertically:
-        //Stop the cat
-        if (!right.isDown && circle_t.vy === 0) {
-        circle_t.vx = 0;
-        }
-    };
-
-    //Up
-    up.press = () => {
-        circle_t.vy = -5;
-        circle_t.vx = 0;
-    };
-    up.release = () => {
-        if (!down.isDown && circle_t.vx === 0) {
-            circle_t.vy = 0;
-        }
-    };
-
-    //Right
-    right.press = () => {
-        circle_t.vx = 5;
-        circle_t.vy = 0;
-    };
-    right.release = () => {
-        if (!left.isDown && circle_t.vy === 0) {
-            circle_t.vx = 0;
-        }
-    };
-
-    //Down
-    down.press = () => {
-        circle_t.vy = 5;
-        circle_t.vx = 0;
-    };
-    down.release = () => {
-        if (!up.isDown && circle_t.vx === 0) {
-            circle_t.vy = 0;
-        }
-    };
-
     //Start the game loop 
     app.ticker.add(delta => gameLoop(delta));
 }
@@ -95,56 +128,8 @@ function gameLoop(delta){
 }
 
 function play(delta) {
-    //Use the circle's velocity to make it move
-    circle_t.x += circle_t.vx;
-    circle_t.y += circle_t.vy
-    console.log("X: " + circle_t.x + " | Y: " + circle_t.y);
-    console.log("dX: " + circle_t.vx + " | dY: " + circle_t.vy);
-}
-
-function keyboard(value) {
-    let key = {};
-    key.value = value;
-    key.isDown = false;
-    key.isUp = true;
-    key.press = undefined;
-    key.release = undefined;
-    //The `downHandler`
-    key.downHandler = event => {
-        if (event.key === key.value) {
-            if (key.isUp && key.press) key.press();
-            key.isDown = true;
-            key.isUp = false;
-            event.preventDefault();
-        }   
-  };
-
-  //The `upHandler`
-    key.upHandler = event => {
-        if (event.key === key.value) {
-            if (key.isDown && key.release) key.release();
-            key.isDown = false;
-            key.isUp = true;
-            event.preventDefault();
-        }
-    };
-
-    //Attach event listeners
-    const downListener = key.downHandler.bind(key);
-    const upListener = key.upHandler.bind(key);
-  
-    window.addEventListener(
-        "keydown", downListener, false
-    );
-    window.addEventListener(
-        "keyup", upListener, false
-    );
-    
-    // Detach event listeners
-    key.unsubscribe = () => {
-        window.removeEventListener("keydown", downListener);
-        window.removeEventListener("keyup", upListener);
-    };
-  
-    return key;
+    t.update();
+    if(pointer.isDown){
+        console.log("X: " + pointer.x + " | Y: " + pointer.y);
+    }
 }
