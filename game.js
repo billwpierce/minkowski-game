@@ -10,6 +10,22 @@ let app = new PIXI.Application({width: 256, height: 256});
 let t = new Tink(PIXI, app.renderer.view);
 let pointer = t.makePointer();
 
+const line_spacing = 40;
+const num_vert_lines = 9;
+const bold_line_v = 1;
+const vert_line_length = (num_vert_lines+1)*line_spacing;
+const num_hori_lines = 9;
+const bold_line_h = 8-1;
+const hori_line_length = (num_hori_lines+1)*line_spacing;
+const vertical_offset = -100;
+const max_y = line_spacing * (num_vert_lines - bold_line_v);
+const min_y = line_spacing * (- 1 - bold_line_v);
+const max_x = line_spacing * (bold_line_h + 1);
+const min_x = -1 * line_spacing * (num_hori_lines - bold_line_h);
+
+const inter_point_x = line_spacing * (bold_line_v - num_vert_lines/2 + .5) + window.innerWidth/2;
+const inter_point_y = vertical_offset + line_spacing * (bold_line_h - num_hori_lines/2 + .5) + window.innerHeight/2;
+
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
 
@@ -21,22 +37,6 @@ app.renderer.autoResize = true;
 app.renderer.resize(window.innerWidth, window.innerHeight);
 
 PIXI.loader.load(setup);
-
-let line_spacing = 40;
-let num_vert_lines = 9;
-let bold_line_v = 1;
-let vert_line_length = (num_vert_lines+1)*line_spacing;
-let num_hori_lines = 9;
-let bold_line_h = 8-1;
-let hori_line_length = (num_hori_lines+1)*line_spacing;
-let vertical_offset = -100;
-let max_y = line_spacing * (num_vert_lines - bold_line_v);
-let min_y = line_spacing * (- 1 - bold_line_v);
-let max_x = line_spacing * (bold_line_h + 1);
-let min_x = line_spacing * (num_hori_lines - bold_line_h);
-
-inter_point_x = line_spacing * (bold_line_v - num_vert_lines/2 + .5) + window.innerWidth/2;
-inter_point_y = vertical_offset + line_spacing * (bold_line_h - num_hori_lines/2 + .5) + window.innerHeight/2;
 
 function plot_graph(){
     for (i = 0; i < num_hori_lines; i++) {
@@ -145,11 +145,89 @@ function plot_mink(velocity){ // velocity as v * c.
     }
 }
 
-plot_graph();
-plot_mink(.3);
-plot_sol();
+function plot_timelines(generated_data){
+    b = generated_data[0];
+    point_one = generated_data[1];
+    point_two = generated_data[2];
+    point_three = generated_data[3];
+    // Graph the lines
+    let white_line = new PIXI.Graphics();
+    let green_line = new PIXI.Graphics();
+    white_line.lineStyle(3, 0xFFFFFF, 1);
+    green_line.lineStyle(3, 0x5ff026, 1);
+    x_start = window.innerWidth * .15;
+    x_end = window.innerWidth * .85;
+    lower_graph = inter_point_y - min_y;
+    delta_y = window.innerHeight - lower_graph;
+    white_y = lower_graph + delta_y * .4;
+    green_y = lower_graph + delta_y * .7;
+    white_line.moveTo(x_start, white_y);
+    green_line.moveTo(x_start, green_y);
+    white_line.lineTo(x_end, white_y);
+    green_line.lineTo(x_end, green_y);
+    app.stage.addChild(white_line);
+    app.stage.addChild(green_line);
+
+    line_length = x_end - x_start;
+    ratio = line_length/(bold_line_h + 1);
+    for(i = 0; i < (bold_line_h + 1) + 1; i++){
+        plot_dash(x_start + i * ratio, white_y, 0xFFFFFF, 2, 5);
+        plot_dash(x_start + i * ratio, green_y, 0x5ff026, 2, 5);
+    }
+    // Place the points on the timelines.
+    plot_min_nor_point(point_one, b, x_start, white_y, green_y, ratio);
+    plot_min_nor_point(point_two, b, x_start, white_y, green_y, ratio);
+    plot_min_nor_point(point_three, b, x_start, white_y, green_y, ratio);
+    console.log("test");
+}
+
+function plot_min_nor_point(point, b, x_offset, white_y, green_y, ratio){ // Helper function, used but don't worry about it.
+    x = point[0];
+    y = point[1];
+    mink_x = (x - y*b)/Math.sqrt(1-Math.pow(b, 2));
+    mink_y = (y - x*b)/Math.sqrt(1-Math.pow(b, 2));
+    white_dash_x = ratio*x + x_offset;
+    plot_dash(white_dash_x, white_y, 0xFFFFFF, 2, 10)
+    green_dash_x = ratio*mink_x + x_offset;
+    plot_dash(green_dash_x, green_y, 0x5ff026, 2, 10)
+}
+
+function plot_dash(x_pos, y_cent, color, line_width, dash_height){
+    let dash = new PIXI.Graphics();
+    dash.lineStyle(line_width, color, 1);
+    dash.moveTo(x_pos, y_cent+dash_height);
+    dash.lineTo(x_pos, y_cent-dash_height);
+    app.stage.addChild(dash);
+    console.log(dash_height);
+}
+
+function generate_all(){
+    b = Math.random() * .4 + .05;
+    point_one = generate_point(b);
+    point_two = generate_point(b);
+    point_three = generate_point(b);
+    return [b, point_one, point_two, point_three];
+}
+
+function generate_point(b){
+    while(true){
+        x = Math.random() * (bold_line_h + 1);
+        y = Math.random() * (num_vert_lines - bold_line_v);
+        mink_x = (x - y*b)/Math.sqrt(1-Math.pow(b, 2));
+        mink_y = (y - x*b)/Math.sqrt(1-Math.pow(b, 2));
+        if(mink_x >= 0 && mink_y >= 0){
+            console.log(mink_x);
+            return [x, y];
+        }
+    }
+}
 
 function setup() {
+    data = generate_all();
+    plot_graph();
+    plot_mink(data[0]);
+    plot_sol();
+    plot_timelines(data);
     //Set the game state
     state = play;
     //Start the game loop 
