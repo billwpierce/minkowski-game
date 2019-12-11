@@ -14,6 +14,14 @@ let guesses = [];
 
 let wasPressed = false;
 
+let data;
+
+let button_created = false;
+
+let submit_button;
+
+const button_radius = 50;
+
 const circle_radius = 10;
 
 const line_spacing = 40;
@@ -43,6 +51,13 @@ app.renderer.autoResize = true;
 app.renderer.resize(window.innerWidth, window.innerHeight);
 
 PIXI.loader.load(setup);
+
+class circle_wrapper {
+    constructor(graphics_object, point){
+        this.graphics = graphics_object;
+        this.point = point;
+    }
+}
 
 function plot_graph(){
     for (i = 0; i < num_hori_lines; i++) {
@@ -75,6 +90,28 @@ function plot_graph(){
 
 function r2a(x, y){
     return [inter_point_x + x, inter_point_y - y];
+}
+
+function a2r(x, y){
+    return [-inter_point_x + x, inter_point_y - y];
+}
+
+function within_bounds(point){
+    x = point[0];
+    y = point[1];
+    if(x > max_x){
+        return false;
+    }
+    if(x < min_x){
+        return false;
+    }
+    if(y > max_y){
+        return false;
+    }
+    if(y < min_y){
+        return false;
+    }
+    return true;
 }
 
 function graph_line_r2a(start_p, end_p, color, line_width){
@@ -259,26 +296,57 @@ function gameLoop(delta){
 
 function play(delta) {
     t.update();
+    if(!button_created){
+        submit_button = createButton();
+        button_created = true;
+    }
     if(pointer.isUp && wasPressed){
         wasPressed = false;
-        removed = test_to_remove_points(pointer.x, pointer.y);
-        if(!removed){
-            circle = new PIXI.Graphics();
-            circle.beginFill(0xfeffb3);
-            circle.drawCircle(pointer.x, pointer.y, circle_radius);
-            app.stage.addChild(circle);
-            cir_obj = new circle_wrapper(circle, [pointer.x, pointer.y]);
-            guesses.push(cir_obj);
+        button_pressed = test_button_pressed([pointer.x, pointer.y])
+        if(button_pressed){
+            if(guesses.length == 3){
+                for(i = 0; i < 3; i++){
+                    new_point = r2a(data[i+1][0]*line_spacing, data[i+1][1]*line_spacing);
+                    circle = new PIXI.Graphics();
+                    circle.beginFill(0x03fcf8);
+                    circle.drawCircle(new_point[0], new_point[1], circle_radius);
+                    app.stage.addChild(circle);
+                }
+                alert(assign_score());
+            }else{
+                alert("There should be exactly 3 points...");
+            }
+        }else{
+            removed = test_to_remove_points(pointer.x, pointer.y);
+            if(!removed && within_bounds(a2r(pointer.x, pointer.y))){
+                circle = new PIXI.Graphics();
+                circle.beginFill(0xfeffb3);
+                circle.drawCircle(pointer.x, pointer.y, circle_radius);
+                app.stage.addChild(circle);
+                cir_obj = new circle_wrapper(circle, [pointer.x, pointer.y]);
+                guesses.push(cir_obj);
+            }
         }
     }else if(pointer.isDown){
         wasPressed = true;
     }
 }
 
+function createButton(){
+    circle = new PIXI.Graphics();
+    circle.beginFill(0xe34b4b);
+    x_pos = window.innerWidth * .9;
+    y_pos = (innerWidth * .1);
+    circle.drawCircle(x_pos, y_pos, button_radius);
+    app.stage.addChild(circle);
+    button_obj = new circle_wrapper(circle, [x_pos, y_pos])
+    return button_obj;
+}
+
 function test_to_remove_points(x, y){
     val = false;
     for(i = 0; i < guesses.length; i++){
-        if(point_dist(guesses[i].point, [x, y]) < circle_radius){
+        if(point_dist(guesses[i].point, [x, y]) <= circle_radius){
             app.stage.removeChild(guesses[i].graphics);
             guesses.splice(i, 1);
             val = true;
@@ -287,9 +355,32 @@ function test_to_remove_points(x, y){
     return val;
 }
 
-class circle_wrapper {
-    constructor(graphics_object, point){
-        this.graphics = graphics_object;
-        this.point = point;
+function test_button_pressed(click_point){
+    if(point_dist(click_point, submit_button.point) <= button_radius){
+        return true;
     }
+    return false;
+}
+
+function assign_score(){
+    let score_orders = {0: [0, 1, 2], 1: [1, 2, 0], 2: [2, 0, 1], 3: [0, 2, 1], 4: [2, 1, 0], 5: [1, 0, 2]};
+    let scores = [];
+    for(i = 0; i < 6; i++){
+        scores.push(evaluate_score(score_orders[i]));
+    }
+    return Math.min(...scores);
+}
+
+function evaluate_score(order){
+    data_one = [data[1][0]*line_spacing, data[1][1]*line_spacing];
+    data_two = [data[2][0]*line_spacing, data[2][1]*line_spacing];
+    data_three = [data[3][0]*line_spacing, data[3][1]*line_spacing];
+    guess_one = a2r(guesses[order[0]].point[0], guesses[order[0]].point[1]);
+    guess_two = a2r(guesses[order[1]].point[0], guesses[order[1]].point[1]);
+    guess_three = a2r(guesses[order[2]].point[0], guesses[order[2]].point[1]);
+    val0 = point_dist(guess_one, data_one)/line_spacing;
+    val1 = point_dist(guess_two, data_two)/line_spacing;
+    val2 = point_dist(guess_three, data_three)/line_spacing;
+    score = Math.pow(val0, 2) + Math.pow(val1, 2) + Math.pow(val2, 2);
+    return score;
 }
