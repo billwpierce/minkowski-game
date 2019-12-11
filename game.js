@@ -10,6 +10,12 @@ let app = new PIXI.Application({width: 256, height: 256});
 let t = new Tink(PIXI, app.renderer.view);
 let pointer = t.makePointer();
 
+let guesses = [];
+
+let wasPressed = false;
+
+const circle_radius = 10;
+
 const line_spacing = 40;
 const num_vert_lines = 9;
 const bold_line_v = 1;
@@ -145,6 +151,15 @@ function plot_mink(velocity){ // velocity as v * c.
     }
 }
 
+function point_dist(point0, point1){
+    x_diff = point0[0] - point1[0];
+    y_diff = point0[1] - point1[1];
+    x_squared = Math.pow(x_diff, 2);
+    y_squared = Math.pow(y_diff, 2);
+    result = Math.sqrt(x_squared + y_squared);
+    return result;
+}
+
 function plot_timelines(generated_data){
     b = generated_data[0];
     point_one = generated_data[1];
@@ -178,7 +193,6 @@ function plot_timelines(generated_data){
     plot_min_nor_point(point_one, b, x_start, white_y, green_y, ratio);
     plot_min_nor_point(point_two, b, x_start, white_y, green_y, ratio);
     plot_min_nor_point(point_three, b, x_start, white_y, green_y, ratio);
-    console.log("test");
 }
 
 function plot_min_nor_point(point, b, x_offset, white_y, green_y, ratio){ // Helper function, used but don't worry about it.
@@ -198,14 +212,19 @@ function plot_dash(x_pos, y_cent, color, line_width, dash_height){
     dash.moveTo(x_pos, y_cent+dash_height);
     dash.lineTo(x_pos, y_cent-dash_height);
     app.stage.addChild(dash);
-    console.log(dash_height);
 }
 
 function generate_all(){
     b = Math.random() * .4 + .05;
-    point_one = generate_point(b);
-    point_two = generate_point(b);
-    point_three = generate_point(b);
+    while(true){
+        point_one = generate_point(b);
+        point_two = generate_point(b);
+        point_three = generate_point(b);
+        min_point_dist = (2*circle_radius)/line_spacing;
+        if(Math.min(point_dist(point_one, point_two), point_dist(point_one, point_three), point_dist(point_two, point_three)) > min_point_dist){
+            break;
+        }
+    }
     return [b, point_one, point_two, point_three];
 }
 
@@ -216,7 +235,6 @@ function generate_point(b){
         mink_x = (x - y*b)/Math.sqrt(1-Math.pow(b, 2));
         mink_y = (y - x*b)/Math.sqrt(1-Math.pow(b, 2));
         if(mink_x >= 0 && mink_y >= 0){
-            console.log(mink_x);
             return [x, y];
         }
     }
@@ -241,7 +259,37 @@ function gameLoop(delta){
 
 function play(delta) {
     t.update();
-    if(pointer.isDown){
-        console.log("X: " + pointer.x + " | Y: " + pointer.y);
+    if(pointer.isUp && wasPressed){
+        wasPressed = false;
+        removed = test_to_remove_points(pointer.x, pointer.y);
+        if(!removed){
+            circle = new PIXI.Graphics();
+            circle.beginFill(0xfeffb3);
+            circle.drawCircle(pointer.x, pointer.y, circle_radius);
+            app.stage.addChild(circle);
+            cir_obj = new circle_wrapper(circle, [pointer.x, pointer.y]);
+            guesses.push(cir_obj);
+        }
+    }else if(pointer.isDown){
+        wasPressed = true;
+    }
+}
+
+function test_to_remove_points(x, y){
+    val = false;
+    for(i = 0; i < guesses.length; i++){
+        if(point_dist(guesses[i].point, [x, y]) < circle_radius){
+            app.stage.removeChild(guesses[i].graphics);
+            guesses.splice(i, 1);
+            val = true;
+        }
+    }
+    return val;
+}
+
+class circle_wrapper {
+    constructor(graphics_object, point){
+        this.graphics = graphics_object;
+        this.point = point;
     }
 }
