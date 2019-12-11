@@ -20,6 +20,10 @@ let button_created = false;
 
 let submit_button;
 
+const point_one_color = 0xe34b4b;
+const point_two_color = 0x4b92e3;
+const point_three_color = 0xbd4be3;
+
 const button_radius = 50;
 
 const circle_radius = 10;
@@ -160,7 +164,7 @@ function plot_mink(velocity){ // velocity as v * c.
     angled_delta = 1/Math.sqrt(1-Math.pow(velocity, 2));
     d_theta = Math.atan(velocity);
     for(i = 0; i < num_vert_lines; i++){
-        start_p = [i * Math.cos(d_theta) * line_spacing, i * Math.sin(d_theta) * line_spacing];
+        start_p = [i * Math.cos(d_theta) * line_spacing*angled_delta, i * Math.sin(d_theta) * line_spacing*angled_delta];
         delta_y = max_y - start_p[1];
         delta_x = delta_y/m;
         end_p = [delta_x + start_p[0], delta_y + start_p[1]];
@@ -174,7 +178,7 @@ function plot_mink(velocity){ // velocity as v * c.
     }
     t_theta = Math.atan(velocity);
     for(i = 0; i < num_hori_lines; i++){
-        start_p = [i * Math.sin(d_theta) * line_spacing, i * Math.cos(d_theta) * line_spacing];
+        start_p = [i * Math.sin(d_theta) * line_spacing*angled_delta, i * Math.cos(d_theta) * line_spacing*angled_delta];
         delta_x = max_x - start_p[0];
         delta_y = delta_x*velocity;
         end_p = [delta_x + start_p[0], delta_y + start_p[1]];
@@ -227,20 +231,20 @@ function plot_timelines(generated_data){
         plot_dash(x_start + i * ratio, green_y, 0x5ff026, 2, 5);
     }
     // Place the points on the timelines.
-    plot_min_nor_point(point_one, b, x_start, white_y, green_y, ratio);
-    plot_min_nor_point(point_two, b, x_start, white_y, green_y, ratio);
-    plot_min_nor_point(point_three, b, x_start, white_y, green_y, ratio);
+    plot_min_nor_point(point_one, b, x_start, white_y, green_y, ratio, point_one_color);
+    plot_min_nor_point(point_two, b, x_start, white_y, green_y, ratio, point_two_color);
+    plot_min_nor_point(point_three, b, x_start, white_y, green_y, ratio, point_three_color);
 }
 
-function plot_min_nor_point(point, b, x_offset, white_y, green_y, ratio){ // Helper function, used but don't worry about it.
+function plot_min_nor_point(point, b, x_offset, white_y, green_y, ratio, color){ // Helper function, used but don't worry about it.
     x = point[0];
     y = point[1];
     mink_x = (x - y*b)/Math.sqrt(1-Math.pow(b, 2));
     mink_y = (y - x*b)/Math.sqrt(1-Math.pow(b, 2));
     white_dash_x = ratio*x + x_offset;
-    plot_dash(white_dash_x, white_y, 0xFFFFFF, 2, 10)
+    plot_dash(white_dash_x, white_y, color, 3, 15)
     green_dash_x = ratio*mink_x + x_offset;
-    plot_dash(green_dash_x, green_y, 0x5ff026, 2, 10)
+    plot_dash(green_dash_x, green_y, color, 3, 15)
 }
 
 function plot_dash(x_pos, y_cent, color, line_width, dash_height){
@@ -253,6 +257,7 @@ function plot_dash(x_pos, y_cent, color, line_width, dash_height){
 
 function generate_all(){
     b = Math.random() * .4 + .05;
+    // b = .5;
     while(true){
         point_one = generate_point(b);
         point_two = generate_point(b);
@@ -308,7 +313,13 @@ function play(delta) {
                 for(i = 0; i < 3; i++){
                     new_point = r2a(data[i+1][0]*line_spacing, data[i+1][1]*line_spacing);
                     circle = new PIXI.Graphics();
-                    circle.beginFill(0x03fcf8);
+                    if(i == 0){
+                        circle.beginFill(point_one_color);
+                    }else if(i == 1){
+                        circle.beginFill(point_two_color);
+                    }else{
+                        circle.beginFill(point_three_color);
+                    }
                     circle.drawCircle(new_point[0], new_point[1], circle_radius);
                     app.stage.addChild(circle);
                 }
