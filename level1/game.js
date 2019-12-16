@@ -1,63 +1,78 @@
 "use strict";
 
-//Create a Pixi Application
-
 const app = new PIXI.Application({width: 256, height: 256});
 
-let t = new Tink(PIXI, app.renderer.view);
+const t = new Tink(PIXI, app.renderer.view);
 
 let pointer = t.makePointer();
 
 pointer.press = () => click(pointer.x, pointer.y);
 
-
-
-
 let circlePoints = [];
-const angle = _degreesToRadians(90 - Math.floor(Math.random() * Math.floor(45)));
+let angle = _degreesToRadians(80 - Math.floor(Math.random() * Math.floor(25)));
+
+let line_spacing = 100;
+let num_vert_lines = 9;
+let bold_line_v = 1;
+let num_hori_lines = 9;
+let bold_line_h = 8-1;
+let max_y = line_spacing * (num_vert_lines - bold_line_v);
+let max_x = line_spacing * (bold_line_h + 1);
+
+let inter_point_x = 0;
+let inter_point_y = window.innerHeight;
 
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
 
 app.renderer.backgroundColor = 0x061639;
-
+app.renderer.antialias = true;
 app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
 app.renderer.autoResize = true;
 app.renderer.resize(window.innerWidth, window.innerHeight);
 
-function drawCircle(x, y){
-  let circle = new PIXI.Graphics();
-  circle.beginFill(0xfeffb3);
-  circle.drawCircle(0, 0, 10);
-  circle.endFill();
-  circle.x = x;
-  circle.y = y;
-  app.stage.addChild(circle);
+PIXI.loader
+  .add("images/submit.png")
+  .add("images/reload.png")
+  .load(setup);
+
+function setup() {
+
+  let submitButton = new PIXI.Sprite(PIXI.loader.resources["images/submit.png"].texture);
+
+  submitButton.x = window.innerWidth - 200;
+  submitButton.y = window.innerHeight - 100;
+  submitButton.width = 200;
+  submitButton.height = 100;
 
 
-  let style = new PIXI.TextStyle({
-  fontFamily: "Arial",
-  fontSize: 36,
-  fill: "white"
+  app.stage.addChild(submitButton);
 
-  });
+  let reloadButton = new PIXI.Sprite(PIXI.loader.resources["images/reload.png"].texture);
 
-  let index = circlePoints.length / 2;
+  reloadButton.x = window.innerWidth - 150;
+  reloadButton.y = 25;
+  reloadButton.width = 100;
+  reloadButton.height = 100;
 
-  let message = new PIXI.Text(index, style);
-  app.stage.addChild(message);
-  message.position.set(x, y);
-  message.style.fontSize = 32;
+
+  app.stage.addChild(reloadButton);
 }
 
 function click(x, y){
 
-  let button_x = window.innerWidth - 100;
-  let button_y = window.innerHeight - 50;
+  let submitButtonX = window.innerWidth - 100;
+  let submitButtonY = window.innerHeight - 50;
 
-  if (Math.abs(button_x - x) < 50 && Math.abs(button_y - y) < 50)
+  let reloadButtonX = window.innerWidth - 100;
+  let reloadButtonY = 75;
+
+  if (Math.abs(submitButtonX - x) < 50 && Math.abs(submitButtonY - y) < 50)
     evaluateWinner();
+
+  if (Math.abs(reloadButtonX - x) < 50 && Math.abs(reloadButtonY - y) < 50)
+    reload();
 
 
   for (var i = 0; i < 3; i++){
@@ -76,32 +91,54 @@ function click(x, y){
 
 }
 
-function evaluateWinner(){
-  let userOrder = findOrder();
-  let actualOrder = calculateOrder();
-  if (arraysMatch(userOrder,actualOrder))
-    {window.alert("Correct!");}
-  else{
-    window.alert("Incorrect! Please Try Again");
-    console.log(actualOrder);
-    console.log(userOrder);
+function reload(){
+  const len = app.stage.children.length;
+
+  const submitButton = app.stage.children[7];
+  const reloadButton = app.stage.children[8];
+  for (let i = 0; i < len; i++){
+
+    try{
+      app.stage.children.shift();
+    }catch(error){
+      continue;
+    }
   }
 
 
+  circlePoints = [];
+  angle = _degreesToRadians(80 - Math.floor(Math.random() * Math.floor(25)));
+
+  main();
+
+  app.stage.addChild(submitButton);
+  app.stage.addChild(reloadButton);
+
+}
+
+function evaluateWinner(){
+  let userOrder = findOrder();
+  let actualOrder = calculateOrder();
+  if (arraysMatch(userOrder,actualOrder)){
+
+    window.alert("Correct!");
+    plot_mink(Math.tan(Math.PI/2 - angle));
+    //reload();
+
+  }
+  else{
+    window.alert("Incorrect! Please Try Again");
+  }
 
 }
 
 function arraysMatch (arr1, arr2) {
 
-	// Check if the arrays are the same length
 	if (arr1.length !== arr2.length) return false;
 
-	// Check if all items exist and are in the same order
 	for (var i = 0; i < arr1.length; i++)
 		if (arr1[i] !== arr2[i]) return false;
 
-
-	// Otherwise, return true
 	return true;
 
 }
@@ -127,24 +164,10 @@ function findOrder(){
     yVals.push(parseInt(y));
   }
 
-
-
   let len = yVals.length;
   let order = new Array(len);
   for (var i = 0; i < len; ++i) order[i] = i + 1;
   order.sort((a, b) => { return yVals[a - 1] < yVals[b - 1] ? -1 : yVals[a - 1] < yVals[b - 1] ? 1 : 0; });
-
-
-
-  // var len = yVals.length;
-  // var indices = new Array(len);
-  // for (var i = 0; i < len; ++i) indices[i] = i + 1;
-  // indices.sort((a, b) => { return yVals[a - 1] > yVals[b - 1] ? -1 : yVals[a - 1] < yVals[b - 1] ? 1 : 0; });
-  //
-  // let order = [];
-  // for (let i = 0; i < 3; i ++)
-  //   order.push(parseInt(children[2 * indices[i] - 1].text));
-
 
   return order;
 
@@ -189,11 +212,35 @@ function calculateOrder(){
 
 }
 
-function drawLine(x,y){
+function drawCircle(x, y){
+  let circle = new PIXI.Graphics();
+  circle.beginFill(0xfeffb3);
+  circle.drawCircle(0, 0, 10);
+  circle.endFill();
+  circle.x = x;
+  circle.y = y;
+  app.stage.addChild(circle);
+
+
+  let style = new PIXI.TextStyle({
+  fontFamily: "Arial",
+  fontSize: 32,
+  fill: "white"
+
+  });
+
+  let index = circlePoints.length / 2;
+
+  let message = new PIXI.Text(index, style);
+  app.stage.addChild(message);
+  message.position.set(x, y);
+}
+
+function drawLine(x1, y1, x2, y2){
   let line = new PIXI.Graphics();
   line.lineStyle(4, 0xFFFFFF, 1);
-  line.moveTo(0, window.innerHeight);
-  line.lineTo(x, y);
+  line.moveTo(x1, y1);
+  line.lineTo(x2, y2);
 
 
   app.stage.addChild(line);
@@ -203,44 +250,86 @@ function _degreesToRadians(x){
   return (x/180 * Math.PI);
 }
 
+function r2a(x, y){
+    return [inter_point_x + x, inter_point_y - y];
+}
+
+function graph_line_r2a(start_p, end_p, color, line_width){
+    let line = new PIXI.Graphics();
+    line.lineStyle(line_width, color, 1);
+    let graphable_start = r2a(start_p[0], start_p[1]);
+    let graphable_end = r2a(end_p[0], end_p[1]);
+
+
+
+    line.moveTo(graphable_start[0], graphable_start[1]);
+    line.lineTo(graphable_end[0], graphable_end[1]);
+    app.stage.addChild(line);
+}
+
+function plot_mink(velocity){ // velocity as v * c.
+    let m = 1/velocity;
+    let b = m * inter_point_x + inter_point_y;
+    let angled_delta = 1/Math.sqrt(1-Math.pow(velocity, 2));
+    let d_theta = Math.atan(velocity);
+    for(let i = 0; i < num_vert_lines; i++){
+        let start_p = [i * Math.cos(d_theta) * line_spacing, i * Math.sin(d_theta) * line_spacing];
+        let delta_y = max_y - start_p[1];
+        let delta_x = delta_y/m;
+        let end_p = [delta_x + start_p[0], delta_y + start_p[1]];
+    if(end_p[0] > max_x){
+        delta_x = max_x - start_p[0];
+        delta_y = m * delta_x;
+        end_p[1] = delta_y + start_p[1];
+        end_p[0] = max_x;
+     }
+     graph_line_r2a(start_p, end_p, 0x5ff026, 2);
+     }
+     let t_theta = Math.atan(velocity);
+     for(let i = 0; i < num_hori_lines; i++){
+         let start_p = [i * Math.sin(d_theta) * line_spacing, i * Math.cos(d_theta) * line_spacing];
+         let delta_x = max_x - start_p[0];
+         let delta_y = delta_x*velocity;
+         let end_p = [delta_x + start_p[0], delta_y + start_p[1]];
+         if(end_p[1] > max_y){
+             delta_y = max_y - start_p[1];
+             delta_x = delta_y/velocity;
+             end_p[0] = delta_x + start_p[0];
+             end_p[1] = max_y;
+         }
+     graph_line_r2a(start_p, end_p, 0x5ff026, 2);
+ }
+}
+
+function generatePoint(){
+  let rand_x = Math.floor(Math.random() * ((window.innerHeight - 5)  - (5) + 1)) + 5;
+  let rand_y = Math.floor(Math.random() * ((window.innerHeight - 5) - (5) + 1)) + 5;
+
+  let point_angle = Math.atan((window.innerHeight - rand_y)/rand_x);
+
+  if (point_angle > angle || point_angle < Math.PI/2 - angle)
+    return generatePoint();
+
+  return [rand_x, rand_y];
+
+}
+
 function main(){
-
-  console.log("ok");
-
-  PIXI.loader
-    .add("images/button.png")
-    .load(setup);
-
-  //This `setup` function will run when the image has loaded
-  function setup() {
-
-    //Create the cat sprite
-    let button = new PIXI.Sprite(PIXI.loader.resources["images/button.png"].texture);
-
-    button.x = window.innerWidth - 200;
-    button.y = window.innerHeight - 100;
-    button.width = 200;
-    button.height = 100;
-
-    //Add the cat to the stage
-    app.stage.addChild(button);
-  }
-
 
   for (let i = 0; i < 3; i++){
 
-    let rand_x = Math.floor(Math.random() * ((window.innerHeight - 5)  - (5) + 1)) + 5;
-    let rand_y = Math.floor(Math.random() * ((window.innerHeight - 5) - (5) + 1)) + 5;
+    let [x_point, y_point] = generatePoint();
 
-    circlePoints.push(rand_x, window.innerHeight - rand_y);
+    circlePoints.push(x_point, window.innerHeight - y_point);
 
-    drawCircle(rand_x, rand_y);
+    drawCircle(x_point, y_point);
 
   }
 
   let x_point = window.innerHeight / Math.tan(angle);
 
-  drawLine(x_point,0);
+  drawLine(0, window.innerHeight, x_point,0);
+
 }
 
 main();
