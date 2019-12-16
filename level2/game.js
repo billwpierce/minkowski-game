@@ -24,7 +24,7 @@ const point_one_color = 0xe34b4b;
 const point_two_color = 0x4b92e3;
 const point_three_color = 0xbd4be3;
 
-const button_radius = 50;
+const button_radius = 20;
 
 const circle_radius = 10;
 
@@ -346,8 +346,8 @@ function play(delta) {
 function createButton(){
     circle = new PIXI.Graphics();
     circle.beginFill(0xe34b4b);
-    x_pos = window.innerWidth * .9;
-    y_pos = (innerWidth * .1);
+    x_pos = window.innerWidth * .95;
+    y_pos = (innerWidth * .05);
     circle.drawCircle(x_pos, y_pos, button_radius);
     app.stage.addChild(circle);
     button_obj = new circle_wrapper(circle, [x_pos, y_pos])
