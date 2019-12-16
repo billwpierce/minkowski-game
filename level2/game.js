@@ -4,7 +4,7 @@ if(!PIXI.utils.isWebGLSupported()){
 }
 
 //Create a Pixi Application
-let app = new PIXI.Application({width: 256, height: 256});
+let app = new PIXI.Application({width: 256, height: 256, antialias: true});
 
 //Create a tink
 let t = new Tink(PIXI, app.renderer.view);
