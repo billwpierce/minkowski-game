@@ -12,10 +12,6 @@ let circlePoints = [];
 let angle = _degreesToRadians(80 - Math.floor(Math.random() * Math.floor(25)));
 
 let line_spacing = 100;
-let num_vert_lines = 11;
-let bold_line_v = 1;
-let num_hori_lines = 9;
-let bold_line_h = 8-1;
 let max_y = window.innerHeight;
 let max_x = window.innerHeight;
 
@@ -26,7 +22,6 @@ let inter_point_y = window.innerHeight;
 document.body.appendChild(app.view);
 
 app.renderer.backgroundColor = 0x061639;
-app.renderer.antialias = true;
 app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
 app.renderer.autoResize = true;
@@ -296,7 +291,7 @@ function plot_mink(velocity){ // velocity as v * c.
      }
 
      i = 0;
-     
+
      while (true){
 
          let start_p = [i * Math.sin(d_theta) * line_spacing, i * Math.cos(d_theta) * line_spacing];
