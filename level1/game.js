@@ -1,6 +1,6 @@
 "use strict";
 
-const app = new PIXI.Application({width: 256, height: 256});
+const app = new PIXI.Application({width: 256, height: 256, antialias: true});
 
 const t = new Tink(PIXI, app.renderer.view);
 
@@ -12,12 +12,12 @@ let circlePoints = [];
 let angle = _degreesToRadians(80 - Math.floor(Math.random() * Math.floor(25)));
 
 let line_spacing = 100;
-let num_vert_lines = 9;
+let num_vert_lines = 11;
 let bold_line_v = 1;
 let num_hori_lines = 9;
 let bold_line_h = 8-1;
-let max_y = line_spacing * (num_vert_lines - bold_line_v);
-let max_x = line_spacing * (bold_line_h + 1);
+let max_y = window.innerHeight;
+let max_x = window.innerHeight;
 
 let inter_point_x = 0;
 let inter_point_y = window.innerHeight;
@@ -272,21 +272,33 @@ function plot_mink(velocity){ // velocity as v * c.
     let b = m * inter_point_x + inter_point_y;
     let angled_delta = 1/Math.sqrt(1-Math.pow(velocity, 2));
     let d_theta = Math.atan(velocity);
-    for(let i = 0; i < num_vert_lines; i++){
+    let i = 0;
+
+    while (true){
+
         let start_p = [i * Math.cos(d_theta) * line_spacing, i * Math.sin(d_theta) * line_spacing];
         let delta_y = max_y - start_p[1];
         let delta_x = delta_y/m;
         let end_p = [delta_x + start_p[0], delta_y + start_p[1]];
-    if(end_p[0] > max_x){
-        delta_x = max_x - start_p[0];
-        delta_y = m * delta_x;
-        end_p[1] = delta_y + start_p[1];
-        end_p[0] = max_x;
-     }
+        if(end_p[0] > max_x){
+            delta_x = max_x - start_p[0];
+            delta_y = m * delta_x;
+            end_p[1] = delta_y + start_p[1];
+            end_p[0] = max_x;
+         }
+
+     if (start_p[0] > max_y)
+       break;
+
+     i += 1;
      graph_line_r2a(start_p, end_p, 0x5ff026, 2);
+
      }
-     let t_theta = Math.atan(velocity);
-     for(let i = 0; i < num_hori_lines; i++){
+
+     i = 0;
+     
+     while (true){
+
          let start_p = [i * Math.sin(d_theta) * line_spacing, i * Math.cos(d_theta) * line_spacing];
          let delta_x = max_x - start_p[0];
          let delta_y = delta_x*velocity;
@@ -297,8 +309,14 @@ function plot_mink(velocity){ // velocity as v * c.
              end_p[0] = delta_x + start_p[0];
              end_p[1] = max_y;
          }
+
+     if (start_p[1] > max_x)
+       break;
+
      graph_line_r2a(start_p, end_p, 0x5ff026, 2);
- }
+     i += 1;
+
+    }
 }
 
 function generatePoint(){
