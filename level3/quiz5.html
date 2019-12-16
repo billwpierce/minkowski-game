@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Part 1</title>
+  <style>* {padding: 10px; margin: 0}
+    .btn {
+    border: none;
+    background-color: #999999;
+    padding: 18px 39px;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-block;
+    width: 300px;
+  }
+
+  .btn:hover {background: #33a3dd;}
+
+  .one {color: #ffffff;}
+  .tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+  color: #fff;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 220px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 0px;
+  padding: 5px 0px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -110px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+</style>
+</head>
+<body style="background-color:#111111;">
+<body>
+  <center><h6><font color="white" face="verdana">Find the time it takes for Talia to reach planet Calculon
+
+</font></h6></center>
+  <center><div class="tooltip">Hint
+  <span class="tooltiptext"><center><img src="https://latex.codecogs.com/svg.latex?{\color{Orchid}t'=\sqrt{1-\frac{v^2}{c^2}}*\frac{L_{0}}{v}}" border="0" />
+</center></span>
+</div></center>
+<center><div class="tooltip">Hint 2
+<span class="tooltiptext"><center>t’ = (sqrt(1-(1.6c)^2/c^2)*(6/0.6c) </center></center></span>
+</div></center>
+
+
+<center><button class="btn one" onclick="myFunction()"><font face="verdana">I have my answer.</font></button></center>
+<script>
+function myFunction() {
+  var txt;
+  var answer = prompt("Please enter your answer, in years");
+  if (answer == 8) {
+    window.location.href = "quiz6.html";
+  } else {
+  }
+}
+</script>
+
+</body>
+</html>

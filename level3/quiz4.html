@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Part 1</title>
+  <style>* {padding: 10px; margin: 0}
+    .btn {
+    border: none;
+    background-color: #999999;
+    padding: 18px 39px;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-block;
+    width: 300px;
+  }
+
+  .btn:hover {background: #33a3dd;}
+
+  .one {color: #ffffff;}
+  .tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+  color: #fff;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 220px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -110px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+</style>
+</head>
+<body style="background-color:#111111;">
+<body>
+  <center><h6><font color="white" face="verdana">Find length contraction that Talia experiences by traveling at a relativistic speed. Aka, find the distance Talia has to travel to get to Calculon
+</font></h6></center>
+  <center><div class="tooltip">Hint
+  <span class="tooltiptext"><center>Use the equation L1= length contraction between planet Calculon and Earth</center></span>
+</div></center>
+<center><div class="tooltip">Hint 2
+<span class="tooltiptext"><center><img src="http://latex.codecogs.com/svg.latex?{\color{Orchid}L_{1}=L_{0}*\sqrt{1-(\frac{v^{2}}{c^{2}})}}" border="0"/></center></center></span>
+</div></center>
+
+<center><div class="tooltip">Hint 3
+<span class="tooltiptext"><center>L1 = 6 light-years * sqrt(1 - 0.36)</center></span>
+</div></center>
+<center><button class="btn one" onclick="myFunction()"><font face="verdana">I have my answer.</font></button></center>
+<script>
+function myFunction() {
+  var txt;
+  var answer = prompt("Please enter your answer, in light-years");
+  if (answer == 4.8) {
+    window.location.href = "quiz5.html";
+  } else {
+  }
+}
+</script>
+
+</body>
+</html>
