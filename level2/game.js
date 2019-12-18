@@ -4,7 +4,7 @@ if(!PIXI.utils.isWebGLSupported()){
 }
 
 //Create a Pixi Application
-let app = new PIXI.Application({width: 256, height: 256, antialias: false});
+let app = new PIXI.Application({width: 256, height: 256, antialias: true});
 
 //Create a tink
 let t = new Tink(PIXI, app.renderer.view);
@@ -379,7 +379,7 @@ function assign_score(){
     for(i = 0; i < 6; i++){
         scores.push(evaluate_score(score_orders[i]));
     }
-    return 1/Math.min(...scores);
+    return 3/Math.min(...scores);
 }
 
 function evaluate_score(order){
