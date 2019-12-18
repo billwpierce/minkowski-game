@@ -1,7 +1,18 @@
+// Initialize Cloud Firestore through Firebase
+firebase.initializeApp({
+    apiKey: 'AIzaSyBGSd9Ckdvh5sBVq_HS0aWqy7gLPnRV',
+    authDomain: 'minkowski-game.firebaseapp.com',
+    projectId: 'minkowski-game'
+  });
+  
+  var db = firebase.firestore();
+
 let type = "WebGL"
 if(!PIXI.utils.isWebGLSupported()){
   type = "canvas"
 }
+
+var hasScored = false;
 
 //Create a Pixi Application
 let app = new PIXI.Application({width: 256, height: 256, antialias: true});
@@ -323,7 +334,13 @@ function play(delta) {
                     circle.drawCircle(new_point[0], new_point[1], circle_radius);
                     app.stage.addChild(circle);
                 }
-                alert(assign_score());
+                score = assign_score();
+                print_output(score);
+                if(!hasScored){
+                    name = prompt("What's your name?");
+                    add_score_to_database(score, name);
+                    hasScored = true;
+                }
             }else{
                 alert("There should be exactly 3 points...");
             }
@@ -394,4 +411,44 @@ function evaluate_score(order){
     val2 = point_dist(guess_three, data_three)/line_spacing;
     score = Math.pow(val0, 2) + Math.pow(val1, 2) + Math.pow(val2, 2);
     return score;
+}
+
+function print_output(score){
+    db.collection("scores").get().then(function(querySnapshot) {
+        var temp = [];
+        var scores = [];
+        var names = [];
+        querySnapshot.forEach(function(doc) {
+            console.log(doc.id, " => ", doc.data());
+            temp.push(doc.data());
+            scores.push(doc.data()["score"]);
+            names.push(doc.data()["name"]);
+        });
+        let winning_index = 0;
+        for(i = 0; i < scores.length; i++){
+            if(scores[i] > scores[winning_index]){
+                winning_index = i;
+            }
+        }
+        rounded = Math.round(score*100)/100;
+        rounded_win = Math.round(scores[winning_index]*100)/100;
+        if(score > scores[winning_index]){
+            alert("You won with " + rounded + " points!");
+        }else{
+            alert("You had " + rounded + " points. \nThe current highscore is " + rounded_win + ", set by " + names[winning_index] + ".");
+        }
+    });
+}
+
+function add_score_to_database(score, name){
+    db.collection("scores").add({
+        name: name,
+        score: score
+    })
+    .then(function(docRef) {
+        return true;
+    })
+    .catch(function(error) {
+        return false;
+    });    
 }
